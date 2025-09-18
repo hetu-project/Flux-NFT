@@ -10,7 +10,7 @@ async function main() {
   console.log("使用账户:", await signer.getAddress());
 
   // 合约地址
-  const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  const contractAddress = "0xBC45C2511eA43F998E659b4722D6795C482a7E07";
 
   // 获取合约实例
   const fluxNFT = await ethers.getContractAt("FluxNFT", contractAddress);
@@ -35,15 +35,68 @@ async function main() {
     return;
   }
 
+  // 先查询所有铸造事件，建立 tokenId 到区块高度的映射
+  console.log("正在查询铸造事件...");
+  const mintEventsMap = new Map<string, number>();
+  
+  try {
+    // 查询所有 Minted 事件，指定区块范围（从部署区块开始到当前区块）
+    const mintFilter = fluxNFT.filters.Minted();
+    // 从合约部署的区块开始查询（大约在 199370 左右）
+    const mintEvents = await fluxNFT.queryFilter(mintFilter, 199370, 'latest');
+    
+    console.log(`找到 ${mintEvents.length} 个铸造事件`);
+    
+    // 建立映射关系
+    for (const event of mintEvents) {
+      const tokenId = event.args[1].toString(); // tokenId 是第二个参数
+      mintEventsMap.set(tokenId, event.blockNumber);
+      console.log(`Token #${tokenId} 在区块 ${event.blockNumber} 铸造`);
+    }
+  } catch (eventError) {
+    console.log("查询铸造事件失败:", eventError.message);
+    console.log("尝试分段查询...");
+    
+    // 分段查询
+    try {
+      const segments = [
+        { from: 199370, to: 199375 },
+        { from: 199375, to: 199380 },
+        { from: 199380, to: 'latest' }
+      ];
+      
+      for (const segment of segments) {
+        try {
+          const mintFilter = fluxNFT.filters.Minted();
+          const events = await fluxNFT.queryFilter(mintFilter, segment.from, segment.to);
+          
+          for (const event of events) {
+            const tokenId = event.args[1].toString();
+            mintEventsMap.set(tokenId, event.blockNumber);
+            console.log(`Token #${tokenId} 在区块 ${event.blockNumber} 铸造`);
+          }
+        } catch (segError) {
+          console.log(`查询区块 ${segment.from}-${segment.to} 失败:`, segError.message);
+        }
+      }
+    } catch (fallbackError) {
+      console.log("分段查询也失败:", fallbackError.message);
+    }
+  }
+
   for (let i = 0; i < totalSupply; i++) {
     try {
       const tokenId = BigInt(i);
       const owner = await fluxNFT.ownerOf(tokenId);
       const tokenURI = await fluxNFT.tokenURI(tokenId);
       
+      // 从映射中获取铸造区块高度
+      const mintBlockNumber = mintEventsMap.get(tokenId.toString());
+      
       console.log(`\n--- NFT #${tokenId} ---`);
       console.log(`所有者: ${owner}`);
       console.log(`URI: ${tokenURI}`);
+      console.log(`铸造区块高度: ${mintBlockNumber || '未知'}`);
       
       // 获取用户铸造数量
       const userMintedCount = await fluxNFT.getUserMintedCount(owner);
