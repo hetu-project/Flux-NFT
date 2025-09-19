@@ -6,9 +6,9 @@ async function main() {
   console.log("开始部署 FluxNFT 合约...");
   
   // 合约参数
-  const name = "Flux NFT";
-  const symbol = "FLUX";
-  const baseTokenURI = "https://api.fluxnft.com/metadata/";
+  const name = "Echo Token";
+  const symbol = "Echo";
+  const baseTokenURI = "https://ipfs.io/ipfs/bafybeih257e5wvqaxvbknhspssgllimh446eqs4jiua5jixdjc4j4zadbi";
   
   // 获取合约工厂
   const FluxNFT = await ethers.getContractFactory("FluxNFT");

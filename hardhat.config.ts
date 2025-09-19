@@ -52,6 +52,14 @@ const config: HardhatUserConfig = {
       gasPrice: "auto",
       timeout: 60000,
     },
+    baseSepolia: {
+      type: "http",
+      chainType: "l1",
+      url: `https://base-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+      accounts: [process.env.BASE_PRIVATE_KEY || ""],
+      gasPrice: "auto",
+      timeout: 60000,
+    },
   },
 };
 

@@ -10,7 +10,7 @@ async function main() {
   console.log("使用账户:", await signer.getAddress());
 
   // 合约地址
-  const contractAddress = "0xBC45C2511eA43F998E659b4722D6795C482a7E07";
+  const contractAddress = "0x0e5189Cd4E46Cd5fA915e2B5c31542a1150eE69C";
 
   // 获取合约实例
   const fluxNFT = await ethers.getContractAt("FluxNFT", contractAddress);
