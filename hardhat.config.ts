@@ -1,66 +1,64 @@
-import type { HardhatUserConfig } from "hardhat/config";
-
-import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
-import { configVariable } from "hardhat/config";
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-toolbox"; 
+import "@openzeppelin/hardhat-upgrades";   
 import * as dotenv from "dotenv";
+import "@nomicfoundation/hardhat-verify";
 
-// 加载环境变量
+
 dotenv.config();
 
+
+const PRIVATE_KEY = process.env.PRIVATE_KEY || "";
+const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || "";
+const BASESCAN_API_KEY = process.env.BASESCAN_API_KEY || "";
+
 const config: HardhatUserConfig = {
-  plugins: [hardhatToolboxMochaEthersPlugin],
+
   solidity: {
-    profiles: {
-      default: {
-        version: "0.8.19",
-        settings: {
-          evmVersion: "london",
-        },
+    version: "0.8.28",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
       },
-      production: {
-        version: "0.8.19",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-          evmVersion: "london",
-        },
-      },
+      evmVersion: "paris", 
     },
   },
+
+
   networks: {
-    hardhatMainnet: {
-      type: "edr-simulated",
-      chainType: "l1",
+    hardhat: {
     },
-    hardhatOp: {
-      type: "edr-simulated",
-      chainType: "op",
+    
+
+    localhost: {
+      url: "http://127.0.0.1:8545",
     },
-    sepolia: {
-      type: "http",
-      chainType: "l1",
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
-    },
-    hetuDev: {
-      type: "http",
-      chainType: "l1",
-      url: "http://161.97.161.133:18545",
-      accounts: [process.env.PRIVATE_KEY || ""],
-      gasPrice: "auto",
-      timeout: 60000,
-    },
+
+
     baseSepolia: {
-      type: "http",
-      chainType: "l1",
-      url: `https://base-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
-      accounts: [process.env.BASE_PRIVATE_KEY || ""],
+      url: `https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [], 
+      chainId: 84532,
+    },
+
+
+    hetuDev: {
+      url: "http://161.97.161.133:18545",
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
       gasPrice: "auto",
       timeout: 60000,
     },
   },
+  etherscan: {
+    apiKey: {
+      baseSepolia: process.env.BASESCAN_API_KEY || "YOUR_KEY_HERE", 
+    },
+  },
+  sourcify: {
+    enabled: true
+  }
+
 };
 
 export default config;
